@@ -27,12 +27,11 @@ Example `config.json`:
   "hosts": [
     {
       "name": "example.com",
-      "health_message": "{\"status\":\"ok\",\"host\":\"example.com\"}",
       "directory": "./public"
     },
     {
       "name": "admin.example.com",
-      "health_message": "{\"status\":\"ok\",\"host\":\"admin\"}"
+      "directory": "./admin"
     }
   ]
 }
@@ -41,5 +40,4 @@ Example `config.json`:
 ## Endpoints
 
 - `GET /` serves files from the configured `directory` for the matched host.
-- `GET /healthz` returns a JSON health response.
-- When a config file is provided, each `host` entry must set a `directory` and may customize `health_message`.
+- When a config file is provided, each `host` entry must set a `directory`.

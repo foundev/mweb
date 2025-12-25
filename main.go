@@ -22,7 +22,6 @@ const (
 	defaultReadTimeout  = 5 * time.Second
 	defaultWriteTimeout = 10 * time.Second
 	shutdownTimeout     = 10 * time.Second
-	defaultHealthBody   = "{\"status\":\"ok\"}\n"
 )
 
 func main() {
@@ -40,7 +39,6 @@ func main() {
 	mux := http.NewServeMux()
 	hostIndex := indexHosts(config)
 	mux.HandleFunc("/", rootHandler(hostIndex, config))
-	mux.HandleFunc("/healthz", healthHandler(hostIndex, config))
 
 	server := &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
@@ -96,9 +94,8 @@ type Config struct {
 }
 
 type HostConfig struct {
-	Name          string `json:"name"`
-	HealthMessage string `json:"health_message"`
-	Directory     string `json:"directory"`
+	Name      string `json:"name"`
+	Directory string `json:"directory"`
 }
 
 func loadConfig(path string) (Config, error) {
@@ -169,28 +166,6 @@ func rootHandler(hosts map[string]HostConfig, config Config) http.HandlerFunc {
 		}
 
 		http.FileServer(http.Dir(host.Directory)).ServeHTTP(w, r)
-	}
-}
-
-func healthHandler(hosts map[string]HostConfig, config Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		host, ok := hostForRequest(r, hosts, config)
-		if !ok {
-			http.NotFound(w, r)
-			return
-		}
-
-		body := defaultHealthBody
-		if host.HealthMessage != "" {
-			body = host.HealthMessage
-			if !strings.HasSuffix(body, "\n") {
-				body += "\n"
-			}
-		}
-
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(body))
 	}
 }
 
