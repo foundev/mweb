@@ -27,11 +27,11 @@ Example `config.json`:
   "hosts": [
     {
       "name": "example.com",
-      "directory": "./public"
+      "directory": "/var/www/example"
     },
     {
       "name": "admin.example.com",
-      "directory": "./admin"
+      "directory": "/var/www/admin"
     }
   ]
 }
@@ -40,4 +40,4 @@ Example `config.json`:
 ## Endpoints
 
 - `GET /` serves files from the configured `directory` for the matched host.
-- When a config file is provided, each `host` entry must set a `directory`.
+- When a config file is provided, each `host` entry must set a `directory` using an absolute path.

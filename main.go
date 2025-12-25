@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -130,6 +131,9 @@ func loadConfig(path string) (Config, error) {
 
 		if host.Directory == "" {
 			return Config{}, fmt.Errorf("host %q directory is required", host.Name)
+		}
+		if !filepath.IsAbs(host.Directory) {
+			return Config{}, fmt.Errorf("host %q directory must be an absolute path", host.Name)
 		}
 
 		info, err := os.Stat(host.Directory)
