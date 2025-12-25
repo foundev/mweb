@@ -22,7 +22,6 @@ const (
 	defaultReadTimeout  = 5 * time.Second
 	defaultWriteTimeout = 10 * time.Second
 	shutdownTimeout     = 10 * time.Second
-	defaultRootMessage  = "mweb is running\n"
 	defaultHealthBody   = "{\"status\":\"ok\"}\n"
 )
 
@@ -98,7 +97,6 @@ type Config struct {
 
 type HostConfig struct {
 	Name          string `json:"name"`
-	RootMessage   string `json:"root_message"`
 	HealthMessage string `json:"health_message"`
 	Directory     string `json:"directory"`
 }
@@ -133,14 +131,16 @@ func loadConfig(path string) (Config, error) {
 			return Config{}, fmt.Errorf("host name cannot be empty")
 		}
 
-		if host.Directory != "" {
-			info, err := os.Stat(host.Directory)
-			if err != nil {
-				return Config{}, fmt.Errorf("host %q directory error: %w", host.Name, err)
-			}
-			if !info.IsDir() {
-				return Config{}, fmt.Errorf("host %q directory %q is not a directory", host.Name, host.Directory)
-			}
+		if host.Directory == "" {
+			return Config{}, fmt.Errorf("host %q directory is required", host.Name)
+		}
+
+		info, err := os.Stat(host.Directory)
+		if err != nil {
+			return Config{}, fmt.Errorf("host %q directory error: %w", host.Name, err)
+		}
+		if !info.IsDir() {
+			return Config{}, fmt.Errorf("host %q directory %q is not a directory", host.Name, host.Directory)
 		}
 	}
 
@@ -163,22 +163,12 @@ func rootHandler(hosts map[string]HostConfig, config Config) http.HandlerFunc {
 			return
 		}
 
-		if host.Directory != "" {
-			http.FileServer(http.Dir(host.Directory)).ServeHTTP(w, r)
+		if host.Directory == "" {
+			http.NotFound(w, r)
 			return
 		}
 
-		message := defaultRootMessage
-		if host.RootMessage != "" {
-			message = host.RootMessage
-			if !strings.HasSuffix(message, "\n") {
-				message += "\n"
-			}
-		}
-
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(message))
+		http.FileServer(http.Dir(host.Directory)).ServeHTTP(w, r)
 	}
 }
 
